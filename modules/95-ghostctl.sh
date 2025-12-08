@@ -3,10 +3,17 @@
 # Supports color, completion, menu UI, dynamic commands.
 
 GS="/opt/ghoststick"
-STATE="$GS/state"
 MODDIR="$GS/modules"
+INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 mkdir -p "$MODDIR"
+
+# Copy GhostCTL module files to /opt/ghoststick/modules/
+for mod in wifi hid exfil pivot profile stealth update system hardening seal diag menu; do
+    if [ -f "$INSTALL_DIR/${mod}.sh" ]; then
+        cp "$INSTALL_DIR/${mod}.sh" "$MODDIR/" 2>/dev/null || true
+    fi
+done
 
 ###########################################
 # COLORS (ANSI Safe)
@@ -30,8 +37,8 @@ banner() {
     echo -e "${BLUE}================================================${RESET}"
     echo -e "${BLUE}                  GhostCTL v2                  ${RESET}"
     echo -e "${BLUE}================================================${RESET}"
-    echo -e "Profile:  $(cat $GS/profile.final 2>/dev/null || echo unknown)"
-    echo -e "Stealth:  $(grep STEALTH_LEVEL $GS/security.env 2>/dev/null | cut -d= -f2)"
+    echo -e "Profile:  $(cat "$GS/profile.final" 2>/dev/null || echo unknown)"
+    echo -e "Stealth:  $(grep STEALTH_LEVEL "$GS/security.env" 2>/dev/null | cut -d= -f2)"
     echo
 }
 
@@ -39,7 +46,7 @@ banner() {
 # CONFIRMATION HANDLER
 ###########################################
 confirm() {
-    read -p "Confirm ($1)? [y/N] " ans
+    read -r -p "Confirm ($1)? [y/N] " ans
     [[ "$ans" == "y" || "$ans" == "Y" ]]
 }
 
@@ -58,6 +65,7 @@ run_module() {
         exit 1
     fi
 
+    # shellcheck source=/dev/null
     source "$MODULE_FILE"
 
     if ! type "mod_$ACTION" >/dev/null 2>&1; then
@@ -107,7 +115,7 @@ menu() {
         echo " 7) Diagnostics"
         echo " 8) Exit"
         echo
-        read -p "> " sel
+        read -r -p "> " sel
 
         case "$sel" in
             1) ghostctl wifi status ;;
@@ -121,7 +129,7 @@ menu() {
         esac
 
         echo
-        read -p "Press ENTER to continue..."
+        read -r -p "Press ENTER to continue..."
     done
 }
 

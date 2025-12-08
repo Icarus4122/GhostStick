@@ -1,0 +1,14 @@
+# Example operator override configuration
+# Copy this to /opt/ghoststick/ and customize as needed
+
+# WiFi Configuration
+wifi.mode=auto
+
+# Profile (secure, windows, linux, macos, exfil)
+profile.force=secure
+
+# HID Keyboard Layout (us, uk, de, fr, etc.)
+hid.layout=us
+
+# USB Mode (auto, force-ecm, force-rndis)
+usb.mode=auto

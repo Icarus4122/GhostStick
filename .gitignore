@@ -1,0 +1,45 @@
+# GhostStick .gitignore
+
+# Operator-specific configuration (should not be committed)
+run.only
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Sensitive data (if accidentally created locally)
+*.key
+*.pem
+*.pass
+*.passphrase
