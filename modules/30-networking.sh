@@ -17,15 +17,21 @@ fi
 touch "$STATE/net.start"
 
 ###############################################
-# 1. WAIT FOR usb0 TO APPEAR (max 3s)
+# 1. WAIT FOR usb0 TO APPEAR (max 10s)
 ###############################################
+echo "[30] Waiting for usb0 device..."
 # shellcheck disable=SC2034
-for i in {1..6}; do
+for i in {1..20}; do
     if ip link show usb0 >/dev/null 2>&1; then
+        echo "[30] usb0 device found"
         break
     fi
     sleep 0.5
 done
+
+if ! ip link show usb0 >/dev/null 2>&1; then
+    echo "[30] WARNING: usb0 device not yet available. Configuration will be applied on next boot."
+fi
 
 ###############################################
 # 2. DETECT ACTIVE NETWORK STACK
@@ -71,15 +77,19 @@ case "$NETMODE" in
             ifname usb0 \
             ipv4.method manual \
             ipv4.addresses "172.16.1.1/24" \
-            ipv6.method ignore
-
-        # Ensure autoconnect + device managed
-        nmcli connection modify usb0 connection.autoconnect yes
-        nmcli device set usb0 managed yes
+            ipv6.method ignore \
+            connection.autoconnect yes
 
         # Reduce route priority so host routes always win
         nmcli connection modify usb0 ipv4.route-metric 200
-        nmcli connection up usb0 || true
+
+        # Only try to bring up if device exists
+        if ip link show usb0 >/dev/null 2>&1; then
+            nmcli device set usb0 managed yes 2>/dev/null || true
+            nmcli connection up usb0 2>/dev/null || echo "[30] Device will be activated on reboot"
+        else
+            echo "[30] Device will be activated when usb0 appears"
+        fi
         ;;
 
     ############################################################
@@ -199,14 +209,16 @@ EOF
 # 8. VERIFY INTERFACE
 ###############################################
 sleep 1
-if ip addr show usb0 | grep -q "172.16.1.1"; then
+if ip addr show usb0 2>/dev/null | grep -q "172.16.1.1"; then
     echo "[30] usb0 UP and configured."
+elif ip link show usb0 >/dev/null 2>&1; then
+    echo "[30] usb0 device present, IP will be assigned on reboot."
 else
-    echo "[30] WARNING: usb0 missing IP (will retry next stage)."
+    echo "[30] usb0 configuration saved, will activate after reboot."
 fi
 
 ###############################################
 # 9. DONE
 ###############################################
 touch "$STATE/net.done"
-echo "[30] Networking ready (adaptive)."
+echo "[30] Networking configuration complete (will be active after reboot)."
