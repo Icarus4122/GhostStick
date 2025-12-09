@@ -9,11 +9,22 @@ INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$MODDIR"
 
 # Copy GhostCTL module files to /opt/ghoststick/modules/
+echo "[95] Copying GhostCTL modules from $INSTALL_DIR to $MODDIR..."
+COPIED=0
+MISSING=0
 for mod in wifi hid exfil pivot profile stealth update system hardening seal diag menu; do
     if [ -f "$INSTALL_DIR/${mod}.sh" ]; then
-        cp "$INSTALL_DIR/${mod}.sh" "$MODDIR/" 2>/dev/null || true
+        if cp "$INSTALL_DIR/${mod}.sh" "$MODDIR/" 2>/dev/null; then
+            COPIED=$((COPIED + 1))
+        else
+            echo "[95] Warning: Failed to copy ${mod}.sh"
+        fi
+    else
+        echo "[95] Warning: Module ${mod}.sh not found in $INSTALL_DIR"
+        MISSING=$((MISSING + 1))
     fi
 done
+echo "[95] Copied $COPIED modules ($MISSING missing)"
 
 ###########################################
 # COLORS (ANSI Safe)
@@ -62,6 +73,12 @@ run_module() {
 
     if [[ ! -f "$MODULE_FILE" ]]; then
         err "Unknown module: $MODULE"
+        echo "Module file not found: $MODULE_FILE"
+        echo "Available modules in $MODDIR:"
+        ls -1 "$MODDIR"/*.sh 2>/dev/null | xargs -n1 basename || echo "  (none)"
+        echo ""
+        echo "To reinstall GhostCTL modules, run:"
+        echo "  sudo bash /opt/GhostStick/modules/95-ghostctl.sh"
         exit 1
     fi
 
