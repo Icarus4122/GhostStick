@@ -184,14 +184,19 @@ systemctl enable dnsmasq >/dev/null 2>&1
 ###############################################
 # 6. ENABLE IPv4 FORWARDING + STEALTH NAT
 ###############################################
+touch /etc/sysctl.conf
 if ! grep -q "^net.ipv4.ip_forward=1" /etc/sysctl.conf; then
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 fi
 sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1
 
 # NAT for usb0 only (stealth)
-iptables -t nat -C POSTROUTING -s 172.16.1.0/24 -j MASQUERADE 2>/dev/null ||
-iptables -t nat -A POSTROUTING -s 172.16.1.0/24 -j MASQUERADE
+if command -v iptables >/dev/null 2>&1; then
+    iptables -t nat -C POSTROUTING -s 172.16.1.0/24 -j MASQUERADE 2>/dev/null ||
+    iptables -t nat -A POSTROUTING -s 172.16.1.0/24 -j MASQUERADE
+else
+    echo "[30] iptables not yet available, NAT will be configured in later module"
+fi
 
 ###############################################
 # 7. DISABLE IPv6 ON usb0 PERMANENTLY

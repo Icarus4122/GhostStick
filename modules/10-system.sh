@@ -102,6 +102,8 @@ CORE_PKGS=(
     pv
     gcc make build-essential
     sudo
+    iptables
+    iptables-persistent
 )
 
 # ARM-specific additions
